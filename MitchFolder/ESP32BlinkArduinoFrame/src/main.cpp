@@ -1,5 +1,8 @@
 #include <AccelStepper.h>
 
+//TODO: set start position of motor + add to position instead of setting to 0 -> can be set to the sie of the pump 
+// ^ This can be a future task <-- instead maybe set current position instead of creating a new one
+
 // Define motor connections
 #define MOTOR1_DIR 4
 #define MOTOR1_STEP 5
@@ -31,10 +34,7 @@ AccelStepper stepper4(AccelStepper::DRIVER, MOTOR4_STEP, MOTOR4_DIR);
 
 //Global Variables
 bool newMotorStart = false; //Flag to determine if a new motor is to be started (or old one changed)
-int stepperOneSpeed = 0;    //Speed that the first stepper motor should use
-int stepperTwoSpeed = 0;    //
-int stepperThreeSpeed = 0;  //
-int stepperFourSpeed = 0;   //
+bool motorRunning = false;  //Flag to define if any motor is running (mostly created to stop all motors)
 
 int newMotorSpeed = 0;      //alternatively use this variable since only need to adjust max speed depending on motor
 int newStepperNumber = 0;   //The number of the channel that will be used when the rotary button is pressed
@@ -44,18 +44,22 @@ int UI_desiredSpeed = 0;
 int UI_desiredAmount = 0;
 int UI_desiredMotorNum = 0;   //kind of redundant, but for clarity of what needs to be specified by the UI
 
+
 //Interupts
 /*
   When the rotary encoder button is depressed the newMotorStart flag will raise
   The newMotorStart flag is used in the loop to set the speed and start rotations for the specified motor instance
 */
-void handleButtonpress()
+void handleButtonPress()
 {
   newMotorStart = true;
 }
 
 
 //Helper function - These funtions were written with the assistance of chatGPT
+
+/*
+*/
 AccelStepper* getStepper(int stepperNumber) {
     switch (stepperNumber) {
         case 1: return &stepper1;
@@ -69,7 +73,7 @@ AccelStepper* getStepper(int stepperNumber) {
 /*
   returns the number of steps to give the desired mL amount
 */
-int calculate_mL(int mLamount)
+int calculate_mL(float mLamount)
 {
   return (mLamount * multiStepping * stepsPerML);
 }
@@ -77,10 +81,10 @@ int calculate_mL(int mLamount)
 /*
   returns the number of steps/second to give the desired mL/hour amount
 */
-int calculateMotorSpeed(int mLPerHour)
+int calculateMotorSpeed(float mLPerHour)
 {
   int secondsPerHour = 3600;    //for code readability
-  return (mLPerHour / secondsPerHour * stepsPerML * multiStepping);
+  return ((mLPerHour * stepsPerML * multiStepping) / secondsPerHour);
 }
 
 //An idea for a method to set the stepper number if you don't want to edit it inside the code (you can make more via copy/paste if you like the idea)
@@ -99,64 +103,57 @@ void startNewMotor(int stepperNumber, int stepperSpeed, int numberSteps)
 {
   AccelStepper* currentStepper = getStepper(stepperNumber);
   currentStepper->setMaxSpeed(stepperSpeed);
-  currentStepper->setAcceleration(stepperSpeed/2);
+  currentStepper->setAcceleration(stepperSpeed);
   currentStepper->moveTo(numberSteps);
+  motorRunning = true;
+}
+
+void turnOffMotors()
+{
+  for(int i = 1; i <= 4; i++) 
+  {
+    startNewMotor(i, 0, 0);
+  }
+  motorRunning = false;
 }
 
 
 void setup() {
-    // Set max speed and acceleration for each motor
-    stepper1.setMaxSpeed(1000*8);
-    stepper1.setAcceleration(500*8);
+    pinMode(ENCODER_BUTTON, INPUT_PULLUP);    //enabling the rotary encoder button
+    attachInterrupt(digitalPinToInterrupt(ENCODER_BUTTON), handleButtonPress, FALLING); //attach interupt trigger to the button pressing down
 
-    stepper2.setMaxSpeed(1200*8);
-    stepper2.setAcceleration(600*8);
+    Serial.begin(9600);
+    newStepperNumber = 1;
+    newMotorSpeed = calculateMotorSpeed(3600/2);
+    newStepperAmount = calculate_mL();
+    startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
 
-    stepper3.setMaxSpeed(800*8);
-    stepper3.setAcceleration(400*8);
-
-    stepper4.setMaxSpeed(1500*8);
-    stepper4.setAcceleration(700*8);
-
-    // Set initial movement target
-    stepper1.moveTo(29600/2*8);    //non-blocking
-    stepper2.moveTo(3000*8);
-    stepper3.moveTo(1000*8);
-    stepper4.moveTo(-1800*8);
 }
 
 
 void loop() {
-    pinMode(ENCODER_BUTTON, INPUT_PULLUP);    //enabling the rotary encoder button
-    attachInterrupt(digitalPinToInterrupt(ENCODER_BUTTON), handleButtonPress, FALLING); //attach interupt trigger to the button pressing down
-    // Continuously run all motors
-    // if (stepper1.distanceToGo() == 0) stepper1.moveTo(-stepper1.currentPosition());
-    // if (stepper2.distanceToGo() == 0) stepper2.moveTo(-stepper2.currentPosition());
-    if (stepper3.distanceToGo() == 0) stepper3.moveTo(-stepper3.currentPosition());
-    if (stepper4.distanceToGo() == 0) stepper4.moveTo(-stepper4.currentPosition());
-
-    if(stepper1.distanceToGo() == 0) {
-      stepper1.setCurrentPosition(0);
-      stepper1.moveTo(-20000*8);
-    } 
-    if(stepper2.distanceToGo() == 0) {
-      stepper2.setCurrentPosition(0);
-      stepper2.moveTo(-3000);
-    } 
+  if(motorRunning)
+  {
     stepper1.run(); //non-blocking commands
     stepper2.run();
     stepper3.run();
     stepper4.run();
+  }
 
-
-    // Trigger flag checks
-    if(newMotorStart)
-    {
-      newStepperNumber = UI_desiredMotorNum;
-      newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
-      newStepperAmount = calculate_mL(UI_desiredAmount);
-      startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount)
-    }
+  // Trigger flag checks
+  if(newMotorStart)
+  {
+    newStepperNumber = UI_desiredMotorNum;
+    newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
+    newStepperAmount = calculate_mL(UI_desiredAmount);
+    startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+    //Then set desired values back to 0
+    UI_desiredMotorNum = 0;
+    UI_desiredSpeed = 0;
+    UI_desiredAmount = 0;
+    newMotorStart = false;
+  }
 
 
 }
+
