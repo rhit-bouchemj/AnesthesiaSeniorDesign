@@ -34,17 +34,24 @@ AccelStepper stepper3(AccelStepper::DRIVER, MOTOR4_STEP, MOTOR4_DIR);
 AccelStepper stepper4(AccelStepper::DRIVER, MOTOR4_STEP, MOTOR4_DIR);
 
 // Global Variables
+
+//flags
 bool newMotorStart = false; // Flag to determine if a new motor is to be started (or old one changed)
 bool motorRunning = false;  // Flag to define if any motor is running (mostly created to stop all motors)
 bool settingparam = false;
+
+//motor
 int newMotorSpeed = 0;    // alternatively use this variable since only need to adjust max speed depending on motor
 int newStepperNumber = 0; // The number of the channel that will be used when the rotary button is pressed
 int newStepperAmount = 0; // the amount that the stepper will output (in steps, I can create a simple calculation to go from mL to this)
 
+//UI
 int UI_desiredSpeed = 0;
 int UI_desiredAmount = 0;
 int UI_desiredMotorNum = 0; // kind of redundant, but for clarity of what needs to be specified by the UI
 
+
+//UI declarations
 TFT_eSPI tft = TFT_eSPI();
 
 #define TFT_GREY 0x5AEB // Custom grey color
@@ -74,6 +81,10 @@ int position = 0;
 int posVal = 0;
 
 /*
+  Return the stepper motor reference of the given input number
+  The purpose is to cut down on if-else statements in accordance to each stepper
+  Inputs:
+  stepperNumber - the number of the stepper that should be returned
  */
 AccelStepper *getStepper(int stepperNumber)
 {
@@ -109,11 +120,6 @@ int calculateMotorSpeed(int mLPerHour)
   return ((mLPerHour * stepsPerML * multiStepping) / secondsPerHour);
 }
 
-// An idea for a method to set the stepper number if you don't want to edit it inside the code (you can make more via copy/paste if you like the idea)
-void setNewStepperNumber(int settingNumber)
-{
-  newStepperNumber = settingNumber;
-}
 
 /*
   Inputs
@@ -154,7 +160,7 @@ void displayMenu()
     tft.setTextColor(TFT_WHITE, TFT_GREY);
   }
   tft.println("Motor Num #");
-  tft.println(newStepperNumber);
+  tft.println(UI_desiredMotorNum);
 
   if (tab == devicespeed)
   {
@@ -165,7 +171,7 @@ void displayMenu()
     tft.setTextColor(TFT_WHITE, TFT_GREY);
   }
   tft.println("Speed");
-  tft.println(newMotorSpeed);
+  tft.println(UI_desiredSpeed);
 
   if (tab == devicevolume)
   {
@@ -176,7 +182,7 @@ void displayMenu()
     tft.setTextColor(TFT_WHITE, TFT_GREY);
   }
   tft.println("Volume");
-  tft.print(newStepperAmount);
+  tft.print(UI_desiredAmount);
   tft.println("ml");
   if (tab == confirm)
   {
@@ -223,15 +229,15 @@ void turn(void)
         switch (tab)
         {
         case deivcenum:
-          newStepperNumber = (newStepperNumber + 1) % 5;
+          UI_desiredMotorNum = (UI_desiredMotorNum + 1) % 5;
           break;
 
         case devicespeed:
-          newMotorSpeed = (newMotorSpeed + 1000) % 8000;
+          UI_desiredSpeed = (UI_desiredSpeed + 1000) % 8000;
           break;
 
         case devicevolume:
-          newStepperAmount = (newStepperAmount + 5) % 105;
+          UI_desiredAmount = (UI_desiredAmount + 5) % 105;
           break;
         default:
           break;
@@ -249,18 +255,18 @@ void turn(void)
         switch (tab)
         {
         case deivcenum:
-          newStepperNumber = (newStepperNumber - 1);
-          newStepperNumber <= 0 ? newStepperNumber = 1 : 0;
+          UI_desiredMotorNum = (UI_desiredMotorNum - 1);
+          UI_desiredMotorNum <= 0 ? UI_desiredMotorNum = 1 : 0;
           break;
 
         case devicespeed:
-          newMotorSpeed = (newMotorSpeed - 1000);
-          newMotorSpeed < 0 ? newMotorSpeed = 0 : 0;
+          UI_desiredSpeed = (UI_desiredSpeed - 1000);
+          UI_desiredSpeed < 0 ? UI_desiredSpeed = 0 : 0;
           break;
 
         case devicevolume:
-          newStepperAmount = (newStepperAmount - 5);
-          newStepperAmount < 0 ? newStepperAmount = 0 : 0;
+          UI_desiredAmount = (UI_desiredAmount - 5);
+          UI_desiredAmount < 0 ? UI_desiredAmount = 0 : 0;
           break;
         default:
           break;
@@ -286,7 +292,7 @@ void setup()
   Serial.println("tftinit");
 
   // tft.setRotation(1);
-  digitalWrite(4, LOW);
+  digitalWrite(4, LOW);   //TODO: What does the 4 represent?
   digitalWrite(4, HIGH);
   pinMode(ENCODER_SW_PIN, INPUT_PULLUP);
   pinMode(ENCODER_DT_PIN, INPUT);
