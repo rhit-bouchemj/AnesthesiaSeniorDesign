@@ -81,7 +81,7 @@ int calculate_mL(float mLamount)
 /*
   returns the number of steps/second to give the desired mL/hour amount
 */
-int calculateMotorSpeed(float mLPerHour)
+int calculateMotorSpeed(int mLPerHour)
 {
   int secondsPerHour = 3600;    //for code readability
   return ((mLPerHour * stepsPerML * multiStepping) / secondsPerHour);
@@ -125,7 +125,7 @@ void setup() {
     Serial.begin(9600);
     newStepperNumber = 1;
     newMotorSpeed = calculateMotorSpeed(3600/2);
-    newStepperAmount = calculate_mL();
+    newStepperAmount = calculate_mL(35);
     startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
 
 }
