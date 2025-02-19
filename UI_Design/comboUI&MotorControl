@@ -181,6 +181,7 @@ void selectOption() {
     stop = true;//stopAll();
     currentOption = 0;
   } 
+  
   else if (inSubMenu && currentOption == subMenuSize - 1) {
     // Exit submenu
     inSubMenu = false;
