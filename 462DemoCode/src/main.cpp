@@ -48,9 +48,9 @@ int position = 0;
 int posVal = 0;
 
 //Define occlusion detection connections
-#define IR_LED_PIN  5      // Adjust to your IR LED pin
-#define IR_PHOTODIODE_PIN  34  // Adjust to your ADC pin
-#define ONBOARD_LED_PIN 2  // Usually GPIO 2, check your board
+// #define IR_LED_PIN  5      // Adjust to your IR LED pin
+// #define IR_PHOTODIODE_PIN  34  // Adjust to your ADC pin
+// #define ONBOARD_LED_PIN 2  // Usually GPIO 2, check your board
 
 
 //Define constant values used
@@ -217,19 +217,18 @@ void buttonPressed(void)
 {
   if ((millis() - lastButtonPress > buttondebounceDelay))
   {
-    Serial.println("Button Pressed");
     lastButtonPress = millis();
-    if (pressCount % 2 == 0)
+    if (pressCount % 2 == 0)  //buttons bounce weird (2 "presses" per press)
     {
+      Serial.println("Button Pressed");
       if (tab == confirm)
       {
         newMotorStart = true;
       }
       else
       {
-        settingparam = !settingparam;
+        settingparam = !settingparam;   //Flip between editing text and not
       }
-
       stateChanged = true;
     }
     pressCount++;
@@ -242,6 +241,7 @@ void turn(void)
   {
     if (digitalRead(ENCODER_CLK_PIN) != digitalRead(ENCODER_DT_PIN))
     {
+      Serial.println("Rotary Turn");
       if (settingparam)
       {
         switch (tab)
@@ -268,7 +268,7 @@ void turn(void)
     }
     else
     {
-      if (settingparam)
+      if (settingparam) //FIXME: WTF is this?
       {
         switch (tab)
         {
@@ -315,10 +315,13 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ENCODER_SW_PIN), buttonPressed, FALLING);
   attachInterrupt(digitalPinToInterrupt(ENCODER_CLK_PIN), turn, CHANGE);
 
-  //IR setup
-  pinMode(IR_LED_PIN, OUTPUT);
-  pinMode(IR_PHOTODIODE_PIN, INPUT);
-  pinMode(ONBOARD_LED_PIN, OUTPUT);
+  // //IR setup
+  // pinMode(IR_LED_PIN, OUTPUT);
+  // pinMode(IR_PHOTODIODE_PIN, INPUT);
+  // pinMode(ONBOARD_LED_PIN, OUTPUT);
+  
+  delay(5000);
+  Serial.println("Test Print");
 
   //UI setup
   tft.init();
@@ -348,6 +351,7 @@ void setup() {
   // newStepperAmount = calculate_mL(10);
   // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
   // previousMillis = millis();
+  
 }
 
 
@@ -357,6 +361,7 @@ void loop() {
   {
     displayMenu();
     stateChanged = false;
+    // Serial.println("state change?");
   }
 
   //motor check
@@ -389,7 +394,7 @@ void loop() {
   if (millis() - previousMillis >= interval)
     {
       // int irReading = analogRead(IR_PHOTODIODE_PIN); // Read the photodiode voltage
-      // Serial.print("IR Sensor Reading: ");
+      Serial.print("IR Sensor Reading: ");
       // Serial.println(irReading);
       previousMillis = millis();
     }
