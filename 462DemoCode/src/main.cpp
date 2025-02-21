@@ -386,7 +386,7 @@ void loop() {
   if (millis() - previousMillis >= interval)
     {
       // int irReading = analogRead(IR_PHOTODIODE_PIN); // Read the photodiode voltage
-      Serial.print("IR Sensor Reading: ");
+      // Serial.print("IR Sensor Reading: ");
       // Serial.println(irReading);
       previousMillis = millis();
     }
