@@ -305,6 +305,9 @@ void turn(void)
 
 //Main Routine
 void setup() {
+
+  Serial.begin(115200);
+
   //Rotary Input setup
   pinMode(ENCODER_SW_PIN, INPUT_PULLUP);
   pinMode(ENCODER_DT_PIN, INPUT);
@@ -318,11 +321,11 @@ void setup() {
   pinMode(ONBOARD_LED_PIN, OUTPUT);
 
   //UI setup
+  tft.init();
   displayMenu();
 
 
 
-  Serial.begin(115200);
   // newStepperNumber = 1;
   // newMotorSpeed = calculateMotorSpeed(3600/2);
   // newStepperAmount = calculate_mL(10);
