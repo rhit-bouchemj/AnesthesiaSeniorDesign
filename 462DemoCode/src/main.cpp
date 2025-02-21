@@ -8,14 +8,14 @@
 // ^ This can be a future task <-- instead maybe set current position instead of creating a new one
 
 // Define motor connections
-#define MOTOR1_DIR 25      //S3 numbers: 4
+#define MOTOR1_DIR  25      //S3 numbers: 4
 #define MOTOR1_STEP 26     // 5
-#define MOTOR2_DIR 32      // 6
+#define MOTOR2_DIR  32      // 6
 #define MOTOR2_STEP 33     // 7  
-#define MOTOR3_DIR 23      // 1
+#define MOTOR3_DIR  1      // 1     //UI
 #define MOTOR3_STEP 22     // 2
-#define MOTOR4_DIR 21     // 42
-#define MOTOR4_STEP 19    // 41
+#define MOTOR4_DIR  21     // 42
+#define MOTOR4_STEP 3    // 41     //UI
 
 // Define Input connections
 #define ENCODER_SW_PIN 35  // this is sw on encoder
@@ -323,28 +323,28 @@ void setup() {
 
 
   Serial.begin(115200);
-  newStepperNumber = 1;
-  newMotorSpeed = calculateMotorSpeed(3600/2);
-  newStepperAmount = calculate_mL(10);
-  startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+  // newStepperNumber = 1;
+  // newMotorSpeed = calculateMotorSpeed(3600/2);
+  // newStepperAmount = calculate_mL(10);
+  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
 
-  newStepperNumber = 2;
-  // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
-  newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(UI_desiredAmount);
-  newStepperAmount = calculate_mL(5);
-  startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+  // newStepperNumber = 2;
+  // // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
+  // newMotorSpeed = calculateMotorSpeed(3600/2);
+  // // newStepperAmount = calculate_mL(UI_desiredAmount);
+  // newStepperAmount = calculate_mL(5);
+  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
   
-  newStepperNumber = 3;
-  newMotorSpeed = calculateMotorSpeed(3600/2);
-  newStepperAmount = calculate_mL(10);
-  startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+  // newStepperNumber = 3;
+  // newMotorSpeed = calculateMotorSpeed(3600/2);
+  // newStepperAmount = calculate_mL(10);
+  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
   
-  newStepperNumber = 4;
-  newMotorSpeed = calculateMotorSpeed(3600/2);
-  newStepperAmount = calculate_mL(10);
-  startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  previousMillis = millis();
+  // newStepperNumber = 4;
+  // newMotorSpeed = calculateMotorSpeed(3600/2);
+  // newStepperAmount = calculate_mL(10);
+  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+  // previousMillis = millis();
 }
 
 
