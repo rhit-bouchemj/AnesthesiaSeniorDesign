@@ -1,3 +1,7 @@
+#include <SPI.h>
+#include <Arduino.h>
+#include <TFT_eSPI.h> // Hardware-specific library
+#include <stdlib.h>
 #include <AccelStepper.h>
 
 //TODO: set start position of motor + add to position instead of setting to 0 -> can be set to the sie of the pump 
@@ -14,15 +18,39 @@
 #define MOTOR4_STEP 19    // 41
 
 // Define Input connections
-// #define ENCODER_BUTTON 10
-#define ENCODER_SW_PIN 11  // this is sw on encoder
-#define ENCODER_DT_PIN 10  // this is dt on encoder
-#define ENCODER_CLK_PIN 9 // this is clk on encoder
+#define ENCODER_SW_PIN 35  // this is sw on encoder
+#define ENCODER_DT_PIN 34  // this is dt on encoder
+#define ENCODER_CLK_PIN 39 // this is clk on encoder
 
 
-//Define LEDscreen connections
+//UI declarations
+TFT_eSPI tft = TFT_eSPI();
+
+#define TFT_GREY 0x5AEB // Custom grey color
+
+enum
+{
+  deivcenum,
+  devicespeed,
+  devicevolume,
+  confirm
+};
+int tab = deivcenum;
+const unsigned long buttondebounceDelay = 50;
+const unsigned long turndebounceDelay = 50;
+unsigned long pressCount = 0;
+unsigned long lastButtonPress = 0;
+unsigned long lastEncoderTurn = 0;
+
+int currentOption = 0; // Index of the highlighted option
+bool stateChanged = false;
+int position = 0;
+int posVal = 0;
 
 //Define occlusion detection connections
+#define IR_LED_PIN  5      // Adjust to your IR LED pin
+#define IR_PHOTODIODE_PIN  34  // Adjust to your ADC pin
+#define ONBOARD_LED_PIN 2  // Usually GPIO 2, check your board
 
 
 //Define constant values used
@@ -39,6 +67,7 @@ AccelStepper stepper4(AccelStepper::DRIVER, MOTOR4_STEP, MOTOR4_DIR);
 //Global Variables
 bool newMotorStart = false; //Flag to determine if a new motor is to be started (or old one changed)
 bool motorRunning = false;  //Flag to define if any motor is running (mostly created to stop all motors)
+bool settingparam = false;
 
 int newMotorSpeed = 0;      //alternatively use this variable since only need to adjust max speed depending on motor
 int newStepperNumber = 0;   //The number of the channel that will be used when the rotary button is pressed
@@ -48,16 +77,19 @@ int UI_desiredSpeed = 0;
 int UI_desiredAmount = 0;
 int UI_desiredMotorNum = 0;   //kind of redundant, but for clarity of what needs to be specified by the UI
 
+int previousMillis = 0;
+int interval = 500;
+
 
 //Interupts
 /*
   When the rotary encoder button is depressed the newMotorStart flag will raise
   The newMotorStart flag is used in the loop to set the speed and start rotations for the specified motor instance
 */
-void buttonPressed()
-{
-  newMotorStart = true;
-}
+// void buttonPressed()
+// {
+//   newMotorStart = true;
+// }
 
 
 //Helper function - These funtions were written with the assistance of chatGPT
@@ -97,7 +129,7 @@ void setNewStepperNumber(int settingNumber)
   newStepperNumber = settingNumber;
 }
 
-
+//Stepper Motor Commands
 /*
   Inputs
   stepperNumber - The number of the channel that will be used for the current dosage <-- What you're inputting
@@ -127,15 +159,168 @@ void turnOffMotors()
   motorRunning = false;
 }
 
-int counter = 0;
+
+//UI commands
+void displayMenu()
+{
+  tft.fillScreen(TFT_GREY);
+  tft.setTextColor(TFT_WHITE, TFT_GREY);
+  tft.setTextFont(2);
+  tft.setTextSize(3);
+
+  if (tab == deivcenum)
+  {
+    tft.setTextColor(TFT_BLACK, TFT_YELLOW);
+  }
+  else
+  {
+    tft.setTextColor(TFT_WHITE, TFT_GREY);
+  }
+  tft.println("Motor Num #");
+  tft.println(UI_desiredMotorNum);
+
+  if (tab == devicespeed)
+  {
+    tft.setTextColor(TFT_BLACK, TFT_YELLOW);
+  }
+  else
+  {
+    tft.setTextColor(TFT_WHITE, TFT_GREY);
+  }
+  tft.println("Speed");
+  tft.println(UI_desiredSpeed);
+
+  if (tab == devicevolume)
+  {
+    tft.setTextColor(TFT_BLACK, TFT_YELLOW);
+  }
+  else
+  {
+    tft.setTextColor(TFT_WHITE, TFT_GREY);
+  }
+  tft.println("Volume");
+  tft.print(UI_desiredAmount);
+  tft.println("ml");
+  if (tab == confirm)
+  {
+    tft.setTextColor(TFT_BLACK, TFT_YELLOW);
+  }
+  else
+  {
+    tft.setTextColor(TFT_WHITE, TFT_GREY);
+  }
+  tft.println("Confirm");
+  tft.setCursor(0,0);
+}
+
+void buttonPressed(void)
+{
+  if ((millis() - lastButtonPress > buttondebounceDelay))
+  {
+    Serial.println("Button Pressed");
+    lastButtonPress = millis();
+    if (pressCount % 2 == 0)
+    {
+      if (tab == confirm)
+      {
+        newMotorStart = true;
+      }
+      else
+      {
+        settingparam = !settingparam;
+      }
+
+      stateChanged = true;
+    }
+    pressCount++;
+  }
+}
+
+void turn(void)
+{
+  if (millis() - lastEncoderTurn > turndebounceDelay)
+  {
+    if (digitalRead(ENCODER_CLK_PIN) != digitalRead(ENCODER_DT_PIN))
+    {
+      if (settingparam)
+      {
+        switch (tab)
+        {
+        case deivcenum:
+          UI_desiredMotorNum = (UI_desiredMotorNum + 1) % 5;
+          break;
+
+        case devicespeed:
+          UI_desiredSpeed = (UI_desiredSpeed + 1000) % 8000;
+          break;
+
+        case devicevolume:
+          UI_desiredAmount = (UI_desiredAmount + 5) % 105;
+          break;
+        default:
+          break;
+        }
+      }
+      else
+      {
+        tab = (tab + 1) % 4;
+      }
+    }
+    else
+    {
+      if (settingparam)
+      {
+        switch (tab)
+        {
+        case deivcenum:
+          UI_desiredMotorNum = (UI_desiredMotorNum - 1);
+          UI_desiredMotorNum <= 0 ? UI_desiredMotorNum = 1 : 0;
+          break;
+
+        case devicespeed:
+          UI_desiredSpeed = (UI_desiredSpeed - 1000);
+          UI_desiredSpeed < 0 ? UI_desiredSpeed = 0 : 0;
+          break;
+
+        case devicevolume:
+          UI_desiredAmount = (UI_desiredAmount - 5);
+          UI_desiredAmount < 0 ? UI_desiredAmount = 0 : 0;
+          break;
+        default:
+          break;
+        }
+      }
+      else
+      {
+        tab = (tab - 1) ;
+        tab < 0 ? tab = 0 : 0;
+      }
+    }
+    lastEncoderTurn = millis();
+    stateChanged = true;
+  }
+}
+
+
+
+//Main Routine
 void setup() {
-    // pinMode(ENCODER_BUTTON, INPUT_PULLUP);    //enabling the rotary encoder button
-    // attachInterrupt(digitalPinToInterrupt(ENCODER_BUTTON), handleButtonPress, FALLING); //attach interupt trigger to the button pressing down
-  // pinMode(ENCODER_SW_PIN, INPUT_PULLUP);
-  // pinMode(ENCODER_DT_PIN, INPUT);
-  // pinMode(ENCODER_CLK_PIN, INPUT);
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_SW_PIN), buttonPressed, FALLING);
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_CLK_PIN), turn, CHANGE);
+  //Rotary Input setup
+  pinMode(ENCODER_SW_PIN, INPUT_PULLUP);
+  pinMode(ENCODER_DT_PIN, INPUT);
+  pinMode(ENCODER_CLK_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_SW_PIN), buttonPressed, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_CLK_PIN), turn, CHANGE);
+
+  //IR setup
+  pinMode(IR_LED_PIN, OUTPUT);
+  pinMode(IR_PHOTODIODE_PIN, INPUT);
+  pinMode(ONBOARD_LED_PIN, OUTPUT);
+
+  //UI setup
+  displayMenu();
+
+
 
   Serial.begin(115200);
   newStepperNumber = 1;
@@ -159,38 +344,54 @@ void setup() {
   newMotorSpeed = calculateMotorSpeed(3600/2);
   newStepperAmount = calculate_mL(10);
   startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+  previousMillis = millis();
 }
 
 
 void loop() {
-  // stepper1.run();//Speed(); //non-blocking commands
+  //UI check
+  if (stateChanged)
+  {
+    displayMenu();
+    stateChanged = false;
+  }
+
+  //motor check
   if(motorRunning)
   {
-    stepper1.run();//Speed(); //non-blocking commands
+    stepper1.run(); //non-blocking commands
     stepper2.run();
     stepper3.run();
     stepper4.run();
   }
   // Trigger flag checks
-  // if(newMotorStart)
-  // {
-  //   Serial.println("button");
-  //   // newStepperNumber = UI_desiredMotorNum;
-  //   newStepperNumber = 2;
-  //   // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
-  //   newMotorSpeed = calculateMotorSpeed(3600);
-  //   // newStepperAmount = calculate_mL(UI_desiredAmount);
-  //   newStepperAmount = calculate_mL(5);
-  //   startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-    
-  //   //Then set desired values back to 0
-  //   UI_desiredMotorNum = 0;
-  //   UI_desiredSpeed = 0;
-  //   UI_desiredAmount = 0;
-  //   newMotorStart = false;
-  // }
-  // delay(5);
+  if(newMotorStart)
+  {
+    Serial.println("button");
+    // newStepperNumber = UI_desiredMotorNum;
+    newStepperNumber = 1;
+    // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
+    newMotorSpeed = calculateMotorSpeed(3600);
+    // newStepperAmount = calculate_mL(UI_desiredAmount);
+    newStepperAmount = calculate_mL(5);
+    startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);  
+    // Then set desired values back to 0
+    UI_desiredMotorNum = 0;
+    UI_desiredSpeed = 0;
+    UI_desiredAmount = 0;
+    newMotorStart = false;
+  }
 
+  //IR detection
+  if (millis() - previousMillis >= interval)
+    {
+      // int irReading = analogRead(IR_PHOTODIODE_PIN); // Read the photodiode voltage
+      Serial.print("IR Sensor Reading: ");
+      // Serial.println(irReading);
+      previousMillis = millis();
+    }
 
 }
+
+
 

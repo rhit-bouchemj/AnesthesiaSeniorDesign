@@ -103,16 +103,17 @@ AccelStepper *getStepper(int stepperNumber)
   }
 }
 
-void motorInit(){
-  pinMode(MOTOR1_DIR, OUTPUT);
-  pinMode(MOTOR1_STEP,OUTPUT);
-  pinMode(MOTOR2_DIR, OUTPUT);
-  pinMode(MOTOR2_STEP,OUTPUT);
-  pinMode(MOTOR3_DIR, OUTPUT);
-  pinMode(MOTOR3_STEP,OUTPUT);
-  pinMode(MOTOR4_DIR, OUTPUT);
-  pinMode(MOTOR4_STEP,OUTPUT);
-}
+//Unnecessary?
+// void motorInit(){
+//   pinMode(MOTOR1_DIR, OUTPUT);
+//   pinMode(MOTOR1_STEP,OUTPUT);
+//   pinMode(MOTOR2_DIR, OUTPUT);
+//   pinMode(MOTOR2_STEP,OUTPUT);
+//   pinMode(MOTOR3_DIR, OUTPUT);
+//   pinMode(MOTOR3_STEP,OUTPUT);
+//   pinMode(MOTOR4_DIR, OUTPUT);
+//   pinMode(MOTOR4_STEP,OUTPUT);
+// }
 
 /*
   returns the number of steps to give the desired mL amount
@@ -296,7 +297,7 @@ void turn(void)
 
 void setup()
 {
-  motorInit();
+  // motorInit();
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("setup");
@@ -313,43 +314,6 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(ENCODER_CLK_PIN), turn, CHANGE);
 
   displayMenu();
-  // motorRunning = true;
-  
-  
-  // newStepperNumber = 1;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  // newStepperNumber = 2;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  // newStepperNumber = 3;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  // newStepperNumber = 4;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  stepper1.setMaxSpeed(1000*8);
-  stepper1.setAcceleration(500*8);
-
-  stepper2.setMaxSpeed(1200*8);
-  stepper2.setAcceleration(600*8);
-
-  stepper3.setMaxSpeed(800*8);
-  stepper3.setAcceleration(400*8);
-
-  stepper4.setMaxSpeed(1500*8);
-  stepper4.setAcceleration(700*8);
-
-  // Set initial movement target
-  stepper1.moveTo(29600/2*8);    //non-blocking
-  stepper2.moveTo(3000*8);
-  stepper3.moveTo(1000*8);
-  stepper4.moveTo(-1800*8);
-  motorRunning = true;
 }
 
 void loop()
