@@ -4,14 +4,14 @@
 // ^ This can be a future task <-- instead maybe set current position instead of creating a new one
 
 // Define motor connections
-#define MOTOR1_DIR 4
-#define MOTOR1_STEP 5
-#define MOTOR2_DIR 6
-#define MOTOR2_STEP 7
-#define MOTOR3_DIR 1
-#define MOTOR3_STEP 2
-#define MOTOR4_DIR 42
-#define MOTOR4_STEP 41
+#define MOTOR1_DIR 39      //S3 numbers: 4
+#define MOTOR1_STEP 34     // 5
+#define MOTOR2_DIR 35      // 6
+#define MOTOR2_STEP 32     // 7  
+#define MOTOR3_DIR 1      // 1
+#define MOTOR3_STEP 3     // 2
+#define MOTOR4_DIR 21     // 42
+#define MOTOR4_STEP 19    // 41
 
 // Define Input connections
 #define ENCODER_BUTTON 10
