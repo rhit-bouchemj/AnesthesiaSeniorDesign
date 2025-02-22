@@ -8,19 +8,19 @@
 // ^ This can be a future task <-- instead maybe set current position instead of creating a new one
 
 // Define motor connections
-#define MOTOR1_DIR  25      //S3 numbers: 4
+#define MOTOR1_DIR  25     //S3 numbers: 4
 #define MOTOR1_STEP 26     // 5
-#define MOTOR2_DIR  32      // 6
+#define MOTOR2_DIR  32     // 6
 #define MOTOR2_STEP 33     // 7  
-#define MOTOR3_DIR  1      // 1     //UI
-#define MOTOR3_STEP 22     // 2
+#define MOTOR3_DIR  0      // 1     //UI
+#define MOTOR3_STEP 15     // 2
 #define MOTOR4_DIR  21     // 42
-#define MOTOR4_STEP 3    // 41     //UI
+#define MOTOR4_STEP 3      // 41     //UI
 
 // Define Input connections
-#define ENCODER_SW_PIN 35  // this is sw on encoder
-#define ENCODER_DT_PIN 34  // this is dt on encoder
-#define ENCODER_CLK_PIN 39 // this is clk on encoder
+#define ENCODER_SW_PIN 27  // this is sw on encoder
+#define ENCODER_DT_PIN 26  // this is dt on encoder
+#define ENCODER_CLK_PIN 25 // this is clk on encoder
 
 
 //UI declarations
@@ -241,7 +241,7 @@ void turn(void)
   {
     if (digitalRead(ENCODER_CLK_PIN) != digitalRead(ENCODER_DT_PIN))
     {
-      Serial.println("Rotary Turn");
+      Serial.println("Rotary Up");
       if (settingparam)
       {
         switch (tab)
@@ -268,6 +268,7 @@ void turn(void)
     }
     else
     {
+      Serial.println("Rotary Down");
       if (settingparam) //FIXME: WTF is this?
       {
         switch (tab)
