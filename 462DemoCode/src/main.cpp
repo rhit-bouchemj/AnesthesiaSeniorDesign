@@ -330,10 +330,10 @@ void setup() {
 
 
 
-  // newStepperNumber = 1;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
+  newStepperNumber = 1;
+  newMotorSpeed = calculateMotorSpeed(3600/2);
+  newStepperAmount = calculate_mL(10);
+  startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
 
   // newStepperNumber = 2;
   // // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
@@ -357,14 +357,6 @@ void setup() {
 
 
 void loop() {
-  //UI check
-  if (stateChanged)
-  {
-    displayMenu();
-    stateChanged = false;
-    // Serial.println("state change?");
-  }
-
   //motor check
   if(motorRunning)
   {
@@ -372,17 +364,18 @@ void loop() {
     stepper2.run();
     stepper3.run();
     stepper4.run();
+    Serial.println("run");
   }
   // Trigger flag checks
   if(newMotorStart)
   {
     Serial.println("button");
-    // newStepperNumber = UI_desiredMotorNum;
-    newStepperNumber = 1;
-    // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
-    newMotorSpeed = calculateMotorSpeed(3600);
-    // newStepperAmount = calculate_mL(UI_desiredAmount);
-    newStepperAmount = calculate_mL(5);
+    newStepperNumber = UI_desiredMotorNum;
+    // newStepperNumber = 1;
+    newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
+    // newMotorSpeed = calculateMotorSpeed(3600);
+    newStepperAmount = calculate_mL(UI_desiredAmount);
+    // newStepperAmount = calculate_mL(5);
     startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);  
     // Then set desired values back to 0
     UI_desiredMotorNum = 0;
@@ -395,11 +388,18 @@ void loop() {
   if (millis() - previousMillis >= interval)
     {
       // int irReading = analogRead(IR_PHOTODIODE_PIN); // Read the photodiode voltage
-      Serial.print("IR Sensor Reading: ");
+      // Serial.print("IR Sensor Reading: ");
       // Serial.println(irReading);
       previousMillis = millis();
     }
 
+  //UI check
+  if (stateChanged)
+  {
+    displayMenu();
+    stateChanged = false;
+    // Serial.println("state change?");
+  }
 }
 
 
