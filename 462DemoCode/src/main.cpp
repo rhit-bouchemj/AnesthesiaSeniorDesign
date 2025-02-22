@@ -8,14 +8,14 @@
 // ^ This can be a future task <-- instead maybe set current position instead of creating a new one
 
 // Define motor connections
-#define MOTOR1_DIR  25     //S3 numbers: 4
-#define MOTOR1_STEP 26     // 5
+#define MOTOR1_DIR  14     //S3 numbers: 4
+#define MOTOR1_STEP 12     // 5
 #define MOTOR2_DIR  32     // 6
 #define MOTOR2_STEP 33     // 7  
-#define MOTOR3_DIR  0      // 1     //UI
-#define MOTOR3_STEP 15     // 2
-#define MOTOR4_DIR  21     // 42
-#define MOTOR4_STEP 3      // 41     //UI
+#define MOTOR3_DIR  21     // 1     //UI
+#define MOTOR3_STEP 3      // 2
+#define MOTOR4_DIR  0      // 42
+#define MOTOR4_STEP 15     // 41     //UI
 
 // Define Input connections
 #define ENCODER_SW_PIN 27  // this is sw on encoder
@@ -321,7 +321,6 @@ void setup() {
   // pinMode(IR_PHOTODIODE_PIN, INPUT);
   // pinMode(ONBOARD_LED_PIN, OUTPUT);
   
-  delay(5000);
   Serial.println("Test Print");
 
   //UI setup
@@ -332,7 +331,7 @@ void setup() {
 
   newStepperNumber = 1;
   newMotorSpeed = calculateMotorSpeed(3600/2);
-  newStepperAmount = calculate_mL(10);
+  newStepperAmount = calculate_mL(-10);
   startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
 
   // newStepperNumber = 2;
@@ -364,7 +363,7 @@ void loop() {
     stepper2.run();
     stepper3.run();
     stepper4.run();
-    Serial.println("run");
+    // Serial.println("run");
   }
   // Trigger flag checks
   if(newMotorStart)
