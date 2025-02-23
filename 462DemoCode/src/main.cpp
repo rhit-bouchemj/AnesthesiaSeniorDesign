@@ -145,6 +145,7 @@ void setNewStepperNumber(int settingNumber)
 void startNewMotor(int stepperNumber, int stepperSpeed, int numberSteps)
 {
   AccelStepper* currentStepper = getStepper(stepperNumber);
+  currentStepper->setCurrentPosition(0);
   currentStepper->setMaxSpeed(stepperSpeed);
   currentStepper->setAcceleration(stepperSpeed/2);
   currentStepper->moveTo(numberSteps);
