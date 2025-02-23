@@ -80,6 +80,13 @@ int UI_desiredMotorNum = 0;   //kind of redundant, but for clarity of what needs
 int previousMillis = 0;
 int interval = 500;
 
+//UI scroll settings
+int incUISpeed = 1000;
+int incUIAmount = 5;
+int incMotorNumber = 1;
+int maxUISpeed = 7000; //+ incUISpeed;
+int maxUIAmount = 100; //+ incUIAmount;
+int maxMotorNumber = 4; //+ incMotorNumber;
 
 //Interupts
 /*
@@ -235,66 +242,82 @@ void buttonPressed(void)
   }
 }
 
+/*
+  Trigger method for rotary encoder turning
+*/
 void turn(void)
 {
+  // Rotary turning debounce
   if (millis() - lastEncoderTurn > turndebounceDelay)
   {
+    // Rotary is turned up
     if (digitalRead(ENCODER_CLK_PIN) != digitalRead(ENCODER_DT_PIN))
     {
-      Serial.println("Rotary Up");
+      // Serial.println("Rotary Up");
+      // Adjusting number options
       if (settingparam)
       {
         switch (tab)
         {
         case deivcenum:
-          UI_desiredMotorNum = (UI_desiredMotorNum + 1) % 5;
+          UI_desiredMotorNum = (UI_desiredMotorNum + incMotorNumber);
+          UI_desiredMotorNum > maxMotorNumber ? UI_desiredMotorNum = maxMotorNumber : 0;  //don't scroll past max
+
           break;
 
         case devicespeed:
-          UI_desiredSpeed = (UI_desiredSpeed + 1000) % 8000;
+          UI_desiredSpeed = (UI_desiredSpeed + incUISpeed);
+          UI_desiredSpeed > maxUISpeed ? UI_desiredSpeed = maxUISpeed : 0;                //don't scroll past max
+
           break;
 
         case devicevolume:
-          UI_desiredAmount = (UI_desiredAmount + 5) % 105;
+          UI_desiredAmount = (UI_desiredAmount + incUIAmount);
+          UI_desiredAmount > maxUIAmount ? UI_desiredAmount = maxUIAmount : 0;            //don't scroll past max
           break;
         default:
           break;
         }
       }
+      //Scrolling through options
       else
       {
-        tab = (tab + 1) % 4;
+        tab = (tab + 1);
+        tab > 3 ? tab = 3 : 0;  //Can't scroll past max
       }
     }
+    //Rotary Encoder turned down
     else
     {
-      Serial.println("Rotary Down");
+      // Serial.println("Rotary Down");
+      // Adjusting number options
       if (settingparam) //FIXME: WTF is this?
       {
         switch (tab)
         {
         case deivcenum:
           UI_desiredMotorNum = (UI_desiredMotorNum - 1);
-          UI_desiredMotorNum <= 0 ? UI_desiredMotorNum = 1 : 0;
+          UI_desiredMotorNum <= 0 ? UI_desiredMotorNum = 1 : 0;   //don't scroll past 0
           break;
 
         case devicespeed:
           UI_desiredSpeed = (UI_desiredSpeed - 1000);
-          UI_desiredSpeed < 0 ? UI_desiredSpeed = 0 : 0;
+          UI_desiredSpeed < 0 ? UI_desiredSpeed = 0 : 0;         //don't scroll past 0
           break;
 
         case devicevolume:
           UI_desiredAmount = (UI_desiredAmount - 5);
-          UI_desiredAmount < 0 ? UI_desiredAmount = 0 : 0;
+          UI_desiredAmount < 0 ? UI_desiredAmount = 0 : 0;        //don't scroll past 0
           break;
         default:
           break;
         }
       }
+      //Scrolling through menu
       else
       {
-        tab = (tab - 1) ;
-        tab < 0 ? tab = 0 : 0;
+        tab = (tab - 1);
+        tab < 0 ? tab = 0 : 0;  //Don't scroll past 0
       }
     }
     lastEncoderTurn = millis();
@@ -325,33 +348,7 @@ void setup() {
 
   //UI setup
   tft.init();
-  displayMenu();
-
-
-
-  newStepperNumber = 1;
-  newMotorSpeed = calculateMotorSpeed(3600/2);
-  newStepperAmount = calculate_mL(-10);
-  startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-
-  // newStepperNumber = 2;
-  // // newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // // newStepperAmount = calculate_mL(UI_desiredAmount);
-  // newStepperAmount = calculate_mL(5);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  
-  // newStepperNumber = 3;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  
-  // newStepperNumber = 4;
-  // newMotorSpeed = calculateMotorSpeed(3600/2);
-  // newStepperAmount = calculate_mL(10);
-  // startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);
-  // previousMillis = millis();
-  
+  displayMenu();  
 }
 
 
@@ -363,18 +360,14 @@ void loop() {
     stepper2.run();
     stepper3.run();
     stepper4.run();
-    // Serial.println("run");
   }
   // Trigger flag checks
   if(newMotorStart)
   {
     Serial.println("button");
     newStepperNumber = UI_desiredMotorNum;
-    // newStepperNumber = 1;
     newMotorSpeed = calculateMotorSpeed(UI_desiredSpeed);
-    // newMotorSpeed = calculateMotorSpeed(3600);
     newStepperAmount = calculate_mL(UI_desiredAmount);
-    // newStepperAmount = calculate_mL(5);
     startNewMotor(newStepperNumber, newMotorSpeed, newStepperAmount);  
     // Then set desired values back to 0
     UI_desiredMotorNum = 0;
@@ -384,6 +377,7 @@ void loop() {
   }
 
   //IR detection
+  //TODO: make a comparator that every cycle will check if it detected an air gap, then output + stop motors
   if (millis() - previousMillis >= interval)
     {
       // int irReading = analogRead(IR_PHOTODIODE_PIN); // Read the photodiode voltage
@@ -397,7 +391,6 @@ void loop() {
   {
     displayMenu();
     stateChanged = false;
-    // Serial.println("state change?");
   }
 }
 
